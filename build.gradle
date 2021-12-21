@@ -1,36 +1,73 @@
 plugins {
     id 'java'
     id 'io.quarkus'
+    id 'com.github.johnrengelman.shadow' version '7.1.1'
 }
-
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        name = "JitPack"
+        url = "https://jitpack.io"
+    }
+    maven {
+        url = "https://mvnrepository.com/"
+    }
 }
 
 dependencies {
-    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkiverse.githubapp:quarkus-github-app:1.6.0'
-    implementation 'io.quarkus:quarkus-arc'
-    implementation 'io.quarkus:quarkus-resteasy'
+    // Quarkus
+    shadow implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:${project.quarkus_platform_version}"))
+    shadow implementation("io.quarkiverse.githubapp:quarkus-github-app:${project.quarkus_github_app_version}")
+    shadow implementation('io.quarkus:quarkus-arc')
+    shadow implementation('io.quarkus:quarkus-resteasy')
+
+    // Modget Manifest API
+    shadow implementation("com.github.ReviversMC.modget-manifest-api:compat:${project.modget_manifest_api_version}")
+    shadow implementation("com.github.ReviversMC.modget-manifest-api:spec3:${project.modget_manifest_api_version}")
+    shadow implementation("com.github.ReviversMC.modget-manifest-api:spec4:${project.modget_manifest_api_version}")
+
+    // Modget Library
+    shadow implementation("com.github.ReviversMC:modget-lib:${project.modget_lib_version}")
+
+    // Jackson
+    shadow implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
+    shadow implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.jackson_version}")
+    shadow implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
+    shadow implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
+
+    // Other
+    shadow implementation("org.apache.commons:commons-text:${project.commons_text_version}")
+    shadow implementation ('org.apache.logging.log4j:log4j-core:2.16.0')
+
+
+    // Testing
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
+
+    compileOnly "com.github.spotbugs:spotbugs:${project.spotbugs_version}"
 }
 
-group 'com.github.reviversmc.modget'
-version '1.0.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-compileJava {
+tasks.withType(JavaCompile).configureEach {
+    // ensure that the encoding is set to UTF-8, no matter what the system default is
+    // this fixes some edge cases with special characters not displaying correctly
+    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+    // If Javadoc is generated, this must be specified in that task too.
     options.encoding = 'UTF-8'
     options.compilerArgs << '-parameters'
+    it.options.release = 11
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+    archiveClassifier.set("")
 }
 
 compileTestJava {

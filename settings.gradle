@@ -5,7 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
     plugins {
-        id "${quarkusPluginId}" version "${quarkusPluginVersion}"
+        id "io.quarkus" version "2.5.4.Final"
     }
 }
 
